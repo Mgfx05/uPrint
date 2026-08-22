@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>ERB — Easy Print & Collect</title>
+
+    <meta
+        name="description"
+        content="Upload your PDF, choose print options, and collect your prints. Fast, affordable printing with ERB."
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+</head>
+
+<body>
+
+    <!-- ════════════════════════════════════════════════════════
+         NAVIGATION
+    ════════════════════════════════════════════════════════ -->
+
+    <nav class="nav" id="mainNav">
+
+        <div class="nav-inner">
+
+            <a href="#" class="nav-logo" id="navLogo">
+                <span class="nav-logo-text">ERB</span>
+                <span class="nav-logo-divider"></span>
+                <span class="nav-logo-tagline">Easy Print & Collect</span>
+            </a>
+
+            <button
+                class="nav-hamburger"
+                id="navHamburger"
+                type="button"
+                aria-label="Toggle navigation menu"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <div class="nav-links" id="navLinks">
+                <a href="#hero" class="nav-link active">Home</a>
+                <a href="#howItWorks" class="nav-link">How it Works</a>
+                <a href="#pricingSection" class="nav-link">Pricing</a>
+                <a href="#trackSection" class="nav-link">Track Order</a>
+            </div>
+
+        </div>
+
+    </nav>
+
+
+    <!-- ════════════════════════════════════════════════════════
+         HERO
+    ════════════════════════════════════════════════════════ -->
+
+    <section class="hero" id="hero">
+
+        <div class="hero-content">
+
+            <h1 class="hero-title">
+                Print your documents
+                <span class="hero-gradient">easily.</span>
+            </h1>
+
+            <p class="hero-subtitle">
+                Upload your PDF, choose your print options, and
+                collect your prints — all in a few clicks.
+            </p>
+
+            <a href="#uploadSection" class="hero-cta" id="heroCta">
+                Start Printing
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M7 7h10v10"/></svg>
+            </a>
+
+        </div>
+
+        <!-- How it works steps -->
+        <div class="steps" id="howItWorks">
+
+            <div class="step">
+                <div class="step-icon step-icon--upload">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <h3 class="step-title">Upload</h3>
+                <p class="step-desc">Upload your PDF document</p>
+            </div>
+
+            <div class="step-connector">
+                <svg width="40" height="12" viewBox="0 0 40 12"><path d="M0 6h32m0 0l-6-5m6 5l-6 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+
+            <div class="step">
+                <div class="step-icon step-icon--print">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                </div>
+                <h3 class="step-title">Print</h3>
+                <p class="step-desc">Choose options & place order</p>
+            </div>
+
+            <div class="step-connector">
+                <svg width="40" height="12" viewBox="0 0 40 12"><path d="M0 6h32m0 0l-6-5m6 5l-6 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+
+            <div class="step">
+                <div class="step-icon step-icon--collect">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                </div>
+                <h3 class="step-title">Collect</h3>
+                <p class="step-desc">Pick up your printed copies</p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ════════════════════════════════════════════════════════
+         MAIN CONTENT
+    ════════════════════════════════════════════════════════ -->
+
+    <main class="main">
+
+
+        <!-- ─── UPLOAD CARD ─────────────────────────────── -->
+
+        <section class="card" id="uploadSection">
+
+            <div class="card-header">
+                <span class="card-step">1</span>
+                <h2 class="card-title">Upload your PDF</h2>
+            </div>
+
+            <label
+                for="pdfFile"
+                class="upload-zone"
+                id="uploadZone"
+            >
+                <div class="upload-zone-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+                </div>
+
+                <div class="upload-zone-text">
+                    <strong>Choose a PDF or drag it here</strong>
+                    <span>PDF files up to 50 MB</span>
+                </div>
+
+                <div class="upload-zone-btn">Browse Files</div>
+            </label>
+
+            <input
+                type="file"
+                id="pdfFile"
+                accept=".pdf,application/pdf"
+                hidden
+            >
+
+            <!-- Upload progress -->
+            <div class="upload-progress hidden" id="uploadProgress">
+                <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                <span class="upload-progress-text" id="uploadProgressText">Uploading...</span>
+            </div>
+
+            <!-- File info after upload -->
+            <div class="file-info hidden" id="fileInfo">
+                <div class="file-info-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                </div>
+                <div class="file-info-details" id="fileInfoDetails">
+                    <!-- Filled by JS -->
+                </div>
+                <button
+                    type="button"
+                    class="file-info-remove"
+                    id="removeFileBtn"
+                    aria-label="Remove file"
+                >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+
+        </section>
+
+
+        <!-- ─── PRINT OPTIONS CARD ──────────────────────── -->
+
+        <section class="card hidden" id="optionsCard">
+
+            <div class="card-header">
+                <span class="card-step">2</span>
+                <h2 class="card-title">Print options</h2>
+            </div>
+
+
+            <!-- Print Type -->
+            <div class="option-group">
+                <h3 class="option-label">Print type</h3>
+                <div class="toggle-cards">
+
+                    <label class="toggle-card" id="toggleBw">
+                        <input
+                            type="radio"
+                            name="printType"
+                            value="bw"
+                            checked
+                        >
+                        <div class="toggle-card-inner">
+                            <div class="toggle-card-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+                            </div>
+                            <strong>B&W</strong>
+                            <span class="toggle-card-price">₹2 / page</span>
+                        </div>
+                    </label>
+
+                    <label class="toggle-card" id="toggleColor">
+                        <input
+                            type="radio"
+                            name="printType"
+                            value="color"
+                        >
+                        <div class="toggle-card-inner">
+                            <div class="toggle-card-icon toggle-card-icon--color">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12c0 1.822.487 3.53 1.338 5C4.739 19.659 7.5 22 12 22z"/></svg>
+                            </div>
+                            <strong>Color</strong>
+                            <span class="toggle-card-price">₹10 / page</span>
+                        </div>
+                    </label>
+
+                </div>
+            </div>
+
+
+            <!-- Copies -->
+            <div class="option-group">
+                <h3 class="option-label">Number of copies</h3>
+                <div class="copies-stepper">
+                    <button
+                        id="minusBtn"
+                        type="button"
+                        class="stepper-btn stepper-btn--minus"
+                        aria-label="Decrease copies"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+
+                    <span class="stepper-value" id="copies">1</span>
+
+                    <button
+                        id="plusBtn"
+                        type="button"
+                        class="stepper-btn stepper-btn--plus"
+                        aria-label="Increase copies"
+                    >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+
+
+            <!-- Paper Size -->
+            <div class="option-group">
+                <h3 class="option-label">Paper size</h3>
+                <div class="toggle-cards">
+                    <label class="toggle-card toggle-card--active" id="toggleA4">
+                        <input type="radio" name="paperSize" value="a4" checked>
+                        <div class="toggle-card-inner">
+                            <strong>A4</strong>
+                            <span class="toggle-card-price">Standard</span>
+                        </div>
+                    </label>
+                    <label class="toggle-card" id="toggleA3">
+                        <input type="radio" name="paperSize" value="a3">
+                        <div class="toggle-card-inner">
+                            <strong>A3</strong>
+                            <span class="toggle-card-price">Large</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- Sides -->
+            <div class="option-group">
+                <h3 class="option-label">Sides</h3>
+                <div class="toggle-cards">
+                    <label class="toggle-card toggle-card--active" id="toggleSingle">
+                        <input type="radio" name="sides" value="single" checked>
+                        <div class="toggle-card-inner">
+                            <strong>Single-sided</strong>
+                        </div>
+                    </label>
+                    <label class="toggle-card" id="toggleDouble">
+                        <input type="radio" name="sides" value="double">
+                        <div class="toggle-card-inner">
+                            <strong>Double-sided</strong>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- Orientation -->
+            <div class="option-group">
+                <h3 class="option-label">Orientation</h3>
+                <div class="toggle-cards">
+                    <label class="toggle-card toggle-card--active" id="togglePortrait">
+                        <input type="radio" name="orientation" value="portrait" checked>
+                        <div class="toggle-card-inner">
+                            <strong>Portrait</strong>
+                        </div>
+                    </label>
+                    <label class="toggle-card" id="toggleLandscape">
+                        <input type="radio" name="orientation" value="landscape">
+                        <div class="toggle-card-inner">
+                            <strong>Landscape</strong>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- Price Summary -->
+            <div class="price-summary" id="pricingSection">
+
+                <div class="price-breakdown" id="priceBreakdown">
+                    <div class="price-row">
+                        <span>Pages</span>
+                        <span id="pricePages">0</span>
+                    </div>
+                    <div class="price-row">
+                        <span>Copies</span>
+                        <span id="priceCopies">1</span>
+                    </div>
+                    <div class="price-row">
+                        <span>Rate</span>
+                        <span id="priceRate">₹2 / page</span>
+                    </div>
+                    <div class="price-divider"></div>
+                    <div class="price-row price-row--total">
+                        <span>Total</span>
+                        <strong id="totalPrice">₹0</strong>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Order Button -->
+            <button
+                id="orderBtn"
+                class="order-btn"
+                type="button"
+            >
+                <span class="order-btn-text">Place Order</span>
+                <svg class="order-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+
+        </section>
+
+
+        <!-- ─── ORDER RESULT CARD ───────────────────────── -->
+
+        <section class="card card--success hidden" id="orderCard">
+
+            <div class="success-header">
+                <div class="success-icon" id="successIcon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <h2 class="success-title">Order created!</h2>
+                <p class="success-message" id="orderMessage">
+                    Your order has been placed successfully.
+                </p>
+            </div>
+
+            <div class="order-details">
+
+                <div class="order-detail">
+                    <span class="order-detail-label">Order ID</span>
+                    <strong class="order-detail-value" id="orderId"></strong>
+                </div>
+
+                <div class="order-detail">
+                    <span class="order-detail-label">Pages</span>
+                    <strong class="order-detail-value" id="orderPages"></strong>
+                </div>
+
+                <div class="order-detail">
+                    <span class="order-detail-label">Print type</span>
+                    <strong class="order-detail-value" id="orderType"></strong>
+                </div>
+
+                <div class="order-detail">
+                    <span class="order-detail-label">Paper size</span>
+                    <strong class="order-detail-value" id="orderPaperSize"></strong>
+                </div>
+
+                <div class="order-detail">
+                    <span class="order-detail-label">Sides</span>
+                    <strong class="order-detail-value" id="orderSides"></strong>
+                </div>
+
+                <div class="order-detail">
+                    <span class="order-detail-label">Orientation</span>
+                    <strong class="order-detail-value" id="orderOrientation"></strong>
+                </div>
+
+                <div class="order-detail">
+                    <span class="order-detail-label">Amount</span>
+                    <strong class="order-detail-value order-detail-value--amount" id="orderAmount"></strong>
+                </div>
+
+            </div>
+
+            <div class="order-status-bar">
+                <span class="order-status-label">Print status</span>
+                <span class="order-status-badge" id="printStatus">Pending</span>
+            </div>
+
+            <button
+                type="button"
+                class="btn-secondary"
+                id="printAnotherBtn"
+            >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+                Print Another
+            </button>
+
+        </section>
+
+
+        <!-- ─── ERROR ───────────────────────────────────── -->
+
+        <div
+            id="errorMessage"
+            class="error-toast hidden"
+        ></div>
+
+
+        <!-- ─── ORDER TRACKING ──────────────────────────── -->
+
+        <section class="card card--track" id="trackSection">
+
+            <div class="card-header">
+                <span class="card-step">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </span>
+                <h2 class="card-title">Track your order</h2>
+            </div>
+
+            <p class="track-description">
+                Enter your order ID to check the current status of your print job.
+            </p>
+
+            <div class="track-input-group">
+                <input
+                    type="text"
+                    id="trackInput"
+                    class="track-input"
+                    placeholder="ERB-XXXXXXXX"
+                    maxlength="20"
+                    autocomplete="off"
+                    spellcheck="false"
+                >
+                <button
+                    type="button"
+                    class="track-btn"
+                    id="trackBtn"
+                >
+                    Track
+                </button>
+            </div>
+
+            <!-- Tracking Result -->
+            <div class="track-result hidden" id="trackResult">
+
+                <div class="track-result-header">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    <strong>Order Found</strong>
+                </div>
+
+                <div class="track-details">
+                    <div class="track-detail-row">
+                        <span>Order ID</span>
+                        <strong id="trackOrderId"></strong>
+                    </div>
+                    <div class="track-detail-row">
+                        <span>Pages</span>
+                        <strong id="trackPages"></strong>
+                    </div>
+                    <div class="track-detail-row">
+                        <span>Copies</span>
+                        <strong id="trackCopies"></strong>
+                    </div>
+                    <div class="track-detail-row">
+                        <span>Print type</span>
+                        <strong id="trackType"></strong>
+                    </div>
+                    <div class="track-detail-row">
+                        <span>Paper size</span>
+                        <strong id="trackPaperSize"></strong>
+                    </div>
+                    <div class="track-detail-row">
+                        <span>Sides</span>
+                        <strong id="trackSides"></strong>
+                    </div>
+                    <div class="track-detail-row">
+                        <span>Orientation</span>
+                        <strong id="trackOrientation"></strong>
+                    </div>
+                    <div class="track-detail-row">
+                        <span>Amount</span>
+                        <strong id="trackAmount"></strong>
+                    </div>
+                    <div class="track-detail-row">
+                        <span>Payment</span>
+                        <strong id="trackPayment"></strong>
+                    </div>
+                    <div class="track-detail-row track-detail-row--status">
+                        <span>Print status</span>
+                        <strong id="trackStatus" class="track-status-badge"></strong>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Track Error -->
+            <div class="track-error hidden" id="trackError"></div>
+
+        </section>
+
+
+    </main>
+
+
+    <!-- ════════════════════════════════════════════════════════
+         FOOTER
+    ════════════════════════════════════════════════════════ -->
+
+    <footer class="footer">
+        <div class="footer-inner">
+
+            <div class="footer-brand">
+                <span class="footer-logo">ERB</span>
+                <p>Easy Print & Collect — fast, affordable printing for everyone.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Quick Links</h4>
+                <a href="#hero">Home</a>
+                <a href="#howItWorks">How it Works</a>
+                <a href="#pricingSection">Pricing</a>
+                <a href="#trackSection">Track Order</a>
+            </div>
+
+            <div class="footer-links">
+                <h4>Pricing</h4>
+                <span>B&W — ₹2 / page</span>
+                <span>Color — ₹10 / page</span>
+                <span>Max 50 copies</span>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <p>ERB © 2026 — Easy Print & Collect. All rights reserved.</p>
+        </div>
+    </footer>
+
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
