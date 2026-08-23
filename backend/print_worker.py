@@ -1,5 +1,6 @@
 import requests
 import time
+import subprocess
 from pathlib import Path
 
 
@@ -12,7 +13,9 @@ SERVER_URL = "http://127.0.0.1:8000"
 DOWNLOAD_DIR = Path("worker_downloads")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 
-SIMULATION_MODE = True
+PRINTER_NAME = "MF3010"
+
+SIMULATION_MODE = False
 
 
 # ============================================================
@@ -22,23 +25,29 @@ SIMULATION_MODE = True
 def get_next_job():
 
     try:
+
         response = requests.get(
             f"{SERVER_URL}/print-queue/next"
         )
 
         if response.status_code != 200:
+
             print("❌ Could not check print queue")
+
             return None
 
         data = response.json()
 
         if data.get("job") is None:
+
             return None
 
         return data["job"]
 
     except requests.exceptions.ConnectionError:
+
         print("❌ ERB server is not running")
+
         return None
 
 
@@ -49,17 +58,21 @@ def get_next_job():
 def download_pdf(file_id):
 
     try:
+
         response = requests.get(
             f"{SERVER_URL}/download-pdf/{file_id}"
         )
 
         if response.status_code != 200:
+
             print("❌ PDF download failed")
+
             return None
 
         file_path = DOWNLOAD_DIR / f"{file_id}.pdf"
 
         with open(file_path, "wb") as file:
+
             file.write(response.content)
 
         print("✅ PDF downloaded successfully")
@@ -67,7 +80,9 @@ def download_pdf(file_id):
         return file_path
 
     except requests.exceptions.ConnectionError:
+
         print("❌ Could not connect to ERB server")
+
         return None
 
 
@@ -78,13 +93,17 @@ def download_pdf(file_id):
 def start_printing(order_id):
 
     try:
+
         response = requests.post(
             f"{SERVER_URL}/order/{order_id}/start-printing"
         )
 
         if response.status_code != 200:
+
             print("❌ Could not start printing")
+
             print(response.text)
+
             return False
 
         print("🖨️ Printing started")
@@ -92,7 +111,9 @@ def start_printing(order_id):
         return True
 
     except requests.exceptions.ConnectionError:
+
         print("❌ Could not connect to ERB server")
+
         return False
 
 
@@ -103,13 +124,17 @@ def start_printing(order_id):
 def complete_printing(order_id):
 
     try:
+
         response = requests.post(
             f"{SERVER_URL}/order/{order_id}/complete-printing"
         )
 
         if response.status_code != 200:
+
             print("❌ Could not complete printing")
+
             print(response.text)
+
             return False
 
         print("✅ Printing completed")
@@ -117,43 +142,106 @@ def complete_printing(order_id):
         return True
 
     except requests.exceptions.ConnectionError:
+
         print("❌ Could not connect to ERB server")
+
         return False
 
 
 # ============================================================
-# SIMULATE PRINTING
+# FAIL PRINTING
 # ============================================================
 
-def simulate_print(job):
+def fail_printing(order_id):
 
-    print("")
-    print("========================================")
-    print("       ERB PRINT SIMULATION")
-    print("========================================")
+    try:
 
-    print(f"Order ID   : {job['order_id']}")
-    print(f"Pages      : {job['pages']}")
-    print(f"Copies     : {job['copies']}")
-    print(f"Print Type : {job['print_type']}")
-    print(f"Amount     : ₹{job['amount']}")
-
-    print("")
-
-    total_pages = job["pages"] * job["copies"]
-
-    for page in range(1, total_pages + 1):
-
-        print(
-            f"🖨️ Simulating page "
-            f"{page}/{total_pages}"
+        response = requests.post(
+            f"{SERVER_URL}/order/{order_id}/fail-printing"
         )
 
-        time.sleep(1)
+        if response.status_code != 200:
+
+            print("❌ Could not mark printing as failed")
+
+            print(response.text)
+
+            return False
+
+        print("❌ Printing marked as failed")
+
+        return True
+
+    except requests.exceptions.ConnectionError:
+
+        print("❌ Could not connect to ERB server")
+
+        return False
+
+
+# ============================================================
+# PRINT PDF USING CUPS
+# ============================================================
+
+def print_pdf(pdf_path, job):
+
+    copies = job.get("copies", 1)
+
+    command = [
+        "lp",
+        "-d",
+        PRINTER_NAME,
+        "-n",
+        str(copies),
+    ]
+
+    # B&W option
+    if job.get("print_type") == "bw":
+
+        command.extend([
+            "-o",
+            "ColorModel=Gray"
+        ])
+
+    command.append(str(pdf_path))
 
     print("")
-    print("✅ Simulation finished")
-    print("========================================")
+
+    print("🖨️ Sending PDF to CUPS...")
+
+    print("Printer:", PRINTER_NAME)
+
+    print("Copies:", copies)
+
+    print("File:", pdf_path)
+
+    try:
+
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True
+        )
+
+        if result.returncode != 0:
+
+            print("❌ CUPS printing failed")
+
+            print(result.stderr)
+
+            return False
+
+        print("✅ CUPS accepted print job")
+
+        print(result.stdout.strip())
+
+        return True
+
+    except Exception as error:
+
+        print("❌ Printing error:", error)
+
+        return False
 
 
 # ============================================================
@@ -163,31 +251,92 @@ def simulate_print(job):
 def process_job(job):
 
     order_id = job["order_id"]
+
     file_id = job["file_id"]
 
     print("")
-    print("📥 New print job received")
-    print(f"Order: {order_id}")
 
-    # Download PDF
+    print("========================================")
+
+    print("📥 NEW PRINT JOB")
+
+    print("========================================")
+
+    print("Order ID   :", order_id)
+
+    print("Pages      :", job["pages"])
+
+    print("Copies     :", job["copies"])
+
+    print("Print Type :", job["print_type"])
+
+    print("Amount     :", f"₹{job['amount']}")
+
+    print("========================================")
+
+    # --------------------------------------------------------
+    # DOWNLOAD PDF
+    # --------------------------------------------------------
+
     pdf_path = download_pdf(file_id)
 
     if pdf_path is None:
+
+        fail_printing(order_id)
+
         return
 
-    print(f"📄 PDF saved to: {pdf_path}")
+    print("📄 PDF saved to:", pdf_path)
 
-    # Start printing
+    # --------------------------------------------------------
+    # START PRINTING
+    # --------------------------------------------------------
+
     if not start_printing(order_id):
+
         return
 
-    # Simulate printing
+    # --------------------------------------------------------
+    # PRINT
+    # --------------------------------------------------------
+
     if SIMULATION_MODE:
 
-        simulate_print(job)
+        print("")
 
-    # Mark completed
-    complete_printing(order_id)
+        print("⚠️ SIMULATION MODE")
+
+        total_pages = job["pages"] * job["copies"]
+
+        for page in range(1, total_pages + 1):
+
+            print(
+                f"🖨️ Simulating page "
+                f"{page}/{total_pages}"
+            )
+
+            time.sleep(1)
+
+        success = True
+
+    else:
+
+        success = print_pdf(
+            pdf_path,
+            job
+        )
+
+    # --------------------------------------------------------
+    # UPDATE ORDER STATUS
+    # --------------------------------------------------------
+
+    if success:
+
+        complete_printing(order_id)
+
+    else:
+
+        fail_printing(order_id)
 
 
 # ============================================================
@@ -197,10 +346,17 @@ def process_job(job):
 def main():
 
     print("")
+
     print("🍓 ERB PRINT WORKER")
+
     print("===================")
+
     print("Simulation mode:", SIMULATION_MODE)
+
     print("Server:", SERVER_URL)
+
+    print("Printer:", PRINTER_NAME)
+
     print("")
 
     while True:
@@ -212,6 +368,7 @@ def main():
         if job is None:
 
             print("📭 No print jobs")
+
             print("")
 
             time.sleep(5)
@@ -221,7 +378,9 @@ def main():
         process_job(job)
 
         print("")
+
         print("🔄 Checking for next job...")
+
         print("")
 
         time.sleep(2)
@@ -232,4 +391,5 @@ def main():
 # ============================================================
 
 if __name__ == "__main__":
+
     main()

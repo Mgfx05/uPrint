@@ -58,7 +58,7 @@ def create_order(
             orientation=orientation,
             amount=total_price,
             payment_status="pending",
-            print_status="pending"
+            print_status="queued"
         )
 
         db.add(order)
