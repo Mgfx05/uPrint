@@ -29,3 +29,7 @@ backend/worker_downloads/*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Local worker backups
+backend/print_worker.py.backup
+backend/print_worker.py.demo-backup

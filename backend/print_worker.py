@@ -13,7 +13,7 @@ SERVER_URL = "http://127.0.0.1:8000"
 DOWNLOAD_DIR = Path("worker_downloads")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
 
-PRINTER_NAME = "MF3010"
+PRINTER_NAME = "Epson_L3210"
 
 SIMULATION_MODE = False
 
@@ -179,69 +179,71 @@ def fail_printing(order_id):
         return False
 
 
+
 # ============================================================
 # PRINT PDF USING CUPS
 # ============================================================
 
-def print_pdf(pdf_path, job):
+SUPPORTED_PRINTERS = {
+    "MF3010",
+    "Epson_L3210",
+}
 
-    copies = job.get("copies", 1)
+
+def print_pdf(pdf_path, job):
+    copies = int(job.get("copies", 1))
+
+    # Use the printer selected for this job.
+    # If none is specified, keep using the existing default.
+    printer_name = job.get("printer_name") or PRINTER_NAME
+
+    if printer_name not in SUPPORTED_PRINTERS:
+        print("Unsupported printer:", printer_name)
+        return False
+
+    if copies < 1:
+        print("Invalid number of copies:", copies)
+        return False
 
     command = [
         "lp",
-        "-d",
-        PRINTER_NAME,
-        "-n",
-        str(copies),
+        "-d", printer_name,
+        "-n", str(copies),
     ]
 
-    # B&W option
+    # Black-and-white printing
     if job.get("print_type") == "bw":
-
-        command.extend([
-            "-o",
-            "ColorModel=Gray"
-        ])
+        command.extend(["-o", "ColorModel=Gray"])
 
     command.append(str(pdf_path))
 
-    print("")
-
-    print("🖨️ Sending PDF to CUPS...")
-
-    print("Printer:", PRINTER_NAME)
-
+    print("\nSending PDF to CUPS...")
+    print("Printer:", printer_name)
     print("Copies:", copies)
-
     print("File:", pdf_path)
 
     try:
-
         result = subprocess.run(
             command,
             capture_output=True,
-            text=True
+            text=True,
+            timeout=120,
+            check=False,
         )
 
         if result.returncode != 0:
-
-            print("❌ CUPS printing failed")
-
+            print("CUPS printing failed")
             print(result.stderr)
-
             return False
 
-        print("✅ CUPS accepted print job")
-
+        print("CUPS accepted print job")
         print(result.stdout.strip())
-
         return True
 
     except Exception as error:
-
-        print("❌ Printing error:", error)
-
+        print("Printing error:", error)
         return False
+
 
 
 # ============================================================
