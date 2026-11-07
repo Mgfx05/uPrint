@@ -1643,3 +1643,5 @@ img, svg {
     .hero { padding-top: 64px; }
     .hero-title { letter-spacing: -1.6px; }
 }
+
+.nav-logo-mark img { width: 30px; height: 30px; object-fit: contain; }
