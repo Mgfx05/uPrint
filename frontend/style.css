@@ -1507,3 +1507,139 @@ img, svg {
         height: 22px;
     }
 }
+
+/* ============================================================
+   uPrint brand layer — purple identity refresh (V1.0)
+   Existing component selectors and JS hooks are intentionally
+   retained to preserve upload, pricing, order and tracking flows.
+============================================================ */
+
+.nav {
+    background: rgba(255, 255, 255, 0.94);
+    border-bottom-color: rgba(101, 20, 184, 0.10);
+}
+.nav-logo { gap: 10px; }
+.nav-logo-mark {
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    color: #6b16bd;
+    background: linear-gradient(145deg, #f3e7ff, #fff);
+    border: 1px solid rgba(101, 20, 184, .14);
+    border-radius: 13px;
+    box-shadow: 0 5px 14px rgba(101, 20, 184, .10);
+}
+.nav-logo-mark svg { width: 31px; height: 31px; }
+.nav-logo-text {
+    font-size: 30px;
+    letter-spacing: -1.8px;
+    background: var(--g-primary);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.nav-logo-tagline {
+    max-width: 150px;
+    line-height: 1.25;
+    color: #766b88;
+    font-weight: 600;
+}
+.brand-eyebrow {
+    width: fit-content;
+    margin: 0 auto 25px;
+    padding: 7px 15px 7px 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid rgba(101, 20, 184, .15);
+    border-radius: 999px;
+    background: rgba(255,255,255,.78);
+    color: #6b21a8;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+}
+.brand-eyebrow-mark {
+    display: grid;
+    place-items: center;
+    min-width: 36px;
+    height: 30px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--g-primary);
+    color: #fff;
+    font-size: 14px;
+    letter-spacing: -.5px;
+}
+.hero {
+    position: relative;
+    overflow: hidden;
+    padding-top: clamp(70px, 9vw, 112px);
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(196, 150, 255, .20), transparent 58%);
+}
+.hero-title { max-width: 850px; margin-left: auto; margin-right: auto; }
+.hero-gradient {
+    display: block;
+    margin-top: 5px;
+    background: linear-gradient(100deg, #5310a2, #7620c5 52%, #a64be8);
+    -webkit-background-clip: text;
+    background-clip: text;
+}
+.hero-subtitle { max-width: 570px; font-size: 17px; }
+.hero-cta {
+    background: var(--g-button);
+    box-shadow: 0 12px 28px rgba(101, 20, 184, .24);
+}
+.step-icon--upload { background: linear-gradient(135deg, #6420c2, #9349e8); }
+.step-icon--print { background: linear-gradient(135deg, #7c3aed, #a855f7); }
+.step-icon--collect { background: linear-gradient(135deg, #059669, #34c99a); }
+.card {
+    border-color: rgba(101, 20, 184, .10);
+    box-shadow: 0 18px 55px rgba(55, 20, 90, .075);
+}
+.card:hover { box-shadow: 0 22px 60px rgba(55, 20, 90, .11); }
+.upload-zone {
+    border-color: rgba(124, 58, 237, .30);
+    background: linear-gradient(135deg, rgba(124, 58, 237, .045), rgba(168, 85, 247, .025));
+}
+.upload-zone:hover {
+    border-color: #8b32df;
+    background: linear-gradient(135deg, rgba(124, 58, 237, .085), rgba(168, 85, 247, .05));
+}
+.upload-zone-btn { color: #6b21a8; background: rgba(124, 58, 237, .09); }
+.toggle-card input:checked + .toggle-card-inner {
+    border-color: #7e22ce;
+    background: linear-gradient(135deg, rgba(124, 58, 237, .075), rgba(168, 85, 247, .045));
+}
+.price-summary, .file-info, .upload-progress {
+    background: linear-gradient(135deg, #f4ecff, #fbf7ff);
+    border-color: rgba(101, 20, 184, .12);
+}
+.price-row--total strong { background: var(--g-primary); -webkit-background-clip: text; background-clip: text; }
+.order-btn, .track-btn { background: var(--g-button); }
+.footer-logo { color: #7020bd; }
+.footer-logo small {
+    display: inline-grid;
+    place-items: center;
+    margin-left: 5px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    color: #fff;
+    background: var(--g-primary);
+    font-size: 10px;
+    vertical-align: middle;
+}
+:focus-visible {
+    outline: 3px solid rgba(139, 50, 223, .55);
+    outline-offset: 3px;
+}
+@media (max-width: 600px) {
+    .nav-logo-mark { width: 36px; height: 36px; border-radius: 11px; }
+    .nav-logo-mark svg { width: 27px; height: 27px; }
+    .nav-logo-text { font-size: 25px; }
+    .nav-logo-tagline { max-width: 108px; font-size: 10px; }
+    .brand-eyebrow { margin-bottom: 20px; font-size: 9px; letter-spacing: 1px; }
+    .hero { padding-top: 64px; }
+    .hero-title { letter-spacing: -1.6px; }
+}
