@@ -14,8 +14,15 @@ This file records safe frontend redesign checkpoints. The production baseline re
 
 | Version | Branch | Scope | Status |
 |---|---|---|---|
+| V1.1 | `redesign/uprint-purple-v1` | Sequential Upload → Print → Collect workflow animation with reduced-motion support and backend-status synchronization | Pending commit |
 | Baseline | `main` | Original ERB frontend and existing API integration | Preserved |
 | V1.0 | `redesign/uprint-purple-v1` | uPrint identity, UΠ brand language, purple/violet theme, logo asset, existing frontend structure and interactions retained | In progress |
+
+## V1.1 files touched
+
+- `frontend/index.html` — semantic workflow state hooks and animated connector structure.
+- `frontend/style.css` — responsive workflow progress and printer/completion animations.
+- `frontend/app.js` — visual workflow sequencer and real tracking-status synchronization; API requests unchanged.
 
 ## V1.0 files touched
 

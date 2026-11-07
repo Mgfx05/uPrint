@@ -148,6 +148,9 @@ const trackPayment =
 const trackStatus =
     document.getElementById("trackStatus");
 
+const workflowSteps = document.querySelectorAll("[data-workflow-step]");
+const workflowConnectors = document.querySelectorAll(".step-connector");
+
 
 // ============================================================
 // VARIABLES
@@ -158,6 +161,8 @@ let uploadedFileId = null;
 let pageCount = 0;
 
 let copies = 1;
+
+let workflowTimer = null;
 
 
 // ============================================================
@@ -170,6 +175,59 @@ console.log("🟢 ERB FRONTEND READY");
 // ============================================================
 // MOBILE NAVIGATION
 // ============================================================
+
+// This explanatory animation does not represent a real order. When a real
+// backend order is tracked, syncWorkflowWithOrderStatus replaces its state.
+function setWorkflowStep(stepName) {
+
+    const stepOrder = ["upload", "print", "collect"];
+    const activeIndex = stepOrder.indexOf(stepName);
+
+    workflowSteps.forEach(function (step, index) {
+        step.classList.toggle("is-active", index === activeIndex);
+        step.classList.toggle("is-complete", activeIndex > index);
+    });
+
+    workflowConnectors.forEach(function (connector, index) {
+        connector.classList.toggle("is-complete", activeIndex > index);
+    });
+
+}
+
+function startWorkflowDemo() {
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setWorkflowStep("upload");
+        return;
+    }
+
+    const steps = ["upload", "print", "collect"];
+    let current = 0;
+
+    setWorkflowStep(steps[current]);
+
+    workflowTimer = setInterval(function () {
+        current = (current + 1) % steps.length;
+        setWorkflowStep(steps[current]);
+    }, 2600);
+
+}
+
+function syncWorkflowWithOrderStatus(status) {
+
+    const normalizedStatus = String(status || "").toLowerCase();
+
+    if (normalizedStatus === "completed") {
+        setWorkflowStep("collect");
+    } else if (normalizedStatus === "printing") {
+        setWorkflowStep("print");
+    } else if (normalizedStatus === "queued" || normalizedStatus === "pending") {
+        setWorkflowStep("upload");
+    }
+
+}
+
+startWorkflowDemo();
 
 if (navHamburger) {
 
@@ -461,6 +519,8 @@ pdfFile.addEventListener("change", async function () {
 
         pageCount =
             data.pages;
+
+        setWorkflowStep("print");
 
 
         console.log(
@@ -961,6 +1021,8 @@ orderBtn.addEventListener(
             printStatus.textContent =
                 data.print_status || "Pending";
 
+            syncWorkflowWithOrderStatus(data.print_status);
+
 
             orderMessage.textContent =
                 data.message ||
@@ -1151,6 +1213,8 @@ if (trackBtn) {
 
             trackStatus.textContent =
                 data.print_status || "—";
+
+            syncWorkflowWithOrderStatus(data.print_status);
 
             trackResult.classList.remove("hidden");
 

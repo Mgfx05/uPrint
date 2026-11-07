@@ -101,9 +101,9 @@
         </div>
 
         <!-- How it works steps -->
-        <div class="steps" id="howItWorks">
+        <div class="steps" id="howItWorks" aria-label="How uPrint works">
 
-            <div class="step">
+            <div class="step is-active" data-workflow-step="upload">
                 <div class="step-icon step-icon--upload">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 </div>
@@ -111,11 +111,11 @@
                 <p class="step-desc">Upload your PDF document</p>
             </div>
 
-            <div class="step-connector">
-                <svg width="40" height="12" viewBox="0 0 40 12"><path d="M0 6h32m0 0l-6-5m6 5l-6 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="step-connector" aria-hidden="true">
+                <span class="step-connector-track"><span class="step-connector-progress"></span></span>
             </div>
 
-            <div class="step">
+            <div class="step" data-workflow-step="print">
                 <div class="step-icon step-icon--print">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                 </div>
@@ -123,11 +123,11 @@
                 <p class="step-desc">Choose options & place order</p>
             </div>
 
-            <div class="step-connector">
-                <svg width="40" height="12" viewBox="0 0 40 12"><path d="M0 6h32m0 0l-6-5m6 5l-6 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <div class="step-connector" aria-hidden="true">
+                <span class="step-connector-track"><span class="step-connector-progress"></span></span>
             </div>
 
-            <div class="step">
+            <div class="step" data-workflow-step="collect">
                 <div class="step-icon step-icon--collect">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                 </div>
