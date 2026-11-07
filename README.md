@@ -1,274 +1,142 @@
-# ERB — Easy Print & Collect
+# uPrint — Unified Printing Interface
 
-> A self-service PDF printing kiosk: upload a PDF, choose print options, place an order, and collect your prints. No login, no app install.
+uPrint is a streamlined, self-service document-printing platform. Upload a PDF, choose your print settings, create an order, and follow its progress from queue to collection — all from one responsive web interface.
 
-## Status
+The product is designed for a local print desk or kiosk setup, with a FastAPI backend, local PDF storage, an SQLite order store, and a print worker that can run on a Raspberry Pi.
 
-🚧 **Work in progress.** The upload → order → queue → print pipeline is functional and has been tested end-to-end, including with a simulated Raspberry Pi print worker.
+## What uPrint does
 
-**Payment is not implemented yet.** Orders are currently created with `payment_status: "pending"`; payment collection is a planned next phase (see [Roadmap](#roadmap)).
+- Upload and validate PDF documents (up to 50 MB in the browser).
+- Detect document page counts automatically.
+- Choose B&W or colour printing, copies, A4/A3 paper, sides, and orientation.
+- Calculate the total price live before an order is created.
+- Create a print order and display its reference ID.
+- Track the live order status using the backend as the source of truth.
+- Explain the Upload → Print → Collect process with an accessible, reduced-motion-friendly visual workflow.
 
-## Table of contents
+## Experience and branding
 
-- [How it works](#how-it-works)
-- [Tech stack](#tech-stack)
-- [Project structure](#project-structure)
-- [Setup](#setup)
-- [Running the project](#running-the-project)
-- [API reference](#api-reference)
-- [Order status lifecycle](#order-status-lifecycle)
-- [Pricing](#pricing)
-- [Frontend notes](#frontend-notes)
-- [Quick manual test (curl)](#quick-manual-test-curl)
-- [Raspberry Pi print worker](#raspberry-pi-print-worker)
-- [Roadmap](#roadmap)
-- [Known limitations](#known-limitations)
+The frontend uses the uPrint purple/violet visual identity: a promotional hero banner, clear option cards, responsive navigation, file-upload feedback, an order confirmation view, live tracking, and a branded footer. It is built with plain HTML, CSS, and JavaScript — no frontend framework or animation library is required.
 
-## How it works
+## Architecture
 
-**System architecture**
-
-```
-Frontend (browser)
-      │  upload PDF, choose options, place order
-      ▼
-FastAPI Backend  ──────────────►  PDF Storage (backend/uploads/)
-      │
-      ▼
-SQLite Database (Orders)
-      │  order picked up from queue
-      ▼
-Raspberry Pi Print Worker
-      │
-      ▼
-Physical Printer
+```text
+Browser (uPrint frontend)
+        │ upload, configure, create and track orders
+        ▼
+FastAPI application
+        ├── Local PDF storage
+        ├── SQLite order database
+        └── Print queue
+                  │
+                  ▼
+        Raspberry Pi print worker → CUPS → printer
 ```
 
-**User flow**
+The frontend and API are served from the same FastAPI process, avoiding cross-origin configuration for the normal local deployment.
 
-```
-Open website
-   → Select PDF
-   → Upload
-   → See file name + page count
-   → Choose B&W / Color
-   → Choose number of copies
-   → See live price
-   → Click Place Order
-   → Order created in database (payment_status: pending)
-   → [Payment — added later]
-   → Order queued
-   → Picked up by Raspberry Pi print worker
-   → Printed
-```
+## Project layout
 
-## Tech stack
-
-| Layer | Technology |
-|---|---|
-| Frontend | Vanilla HTML / CSS / JavaScript |
-| Backend | FastAPI (Python) |
-| Database | SQLite |
-| File storage | Local filesystem (`backend/uploads/`) |
-| Print worker | Python script on Raspberry Pi |
-
-## Project structure
-
-```
-~
+```text
+uPrint/
 ├── backend/
-│   ├── main.py              # FastAPI app, router registration, static file mount
-│   ├── routes/
-│   │   ├── health.py        # Health check endpoint
-│   │   ├── upload.py        # PDF upload handling
-│   │   ├── pricing.py       # Pricing logic
-│   │   └── orders.py        # Order lifecycle endpoints
-│   ├── models/
-│   │   ├── database.py      # SQLite connection / schema
-│   │   └── order.py         # Order data model
-│   └── uploads/              # Uploaded PDFs are stored here
+│   ├── main.py                 # FastAPI application and frontend mount
+│   ├── routes/                 # Upload, pricing, health, and order APIs
+│   ├── models/                 # SQLite database and order model
+│   ├── services/               # Pricing rules
+│   └── print_worker.py         # Print-queue worker
 ├── frontend/
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
-├── raspberry-pi/            # Print worker script(s)
+│   ├── index.html              # uPrint interface
+│   ├── style.css               # Responsive uPrint design system
+│   ├── app.js                  # Upload, pricing, order, and tracking flows
+│   └── assets/                 # uPrint logo assets
 └── docs/
+    └── VERSION_HISTORY.md      # Redesign checkpoints
 ```
 
-## Setup
+## Run locally
 
-**Prerequisites:** Python 3.10+, pip
+### Prerequisites
 
-1. **Clone and enter the project**
-   ```bash
-   git clone <your-repo-url>
-   cd erb
-   ```
+- Python 3.10 or newer
+- `pip`
 
-2. **Create a virtual environment and install backend dependencies**
-   ```bash
-   cd backend
-   python -m venv venv
-   source venv/bin/activate      # Windows: venv\Scripts\activate
-   pip install fastapi "uvicorn[standard]" python-multipart pypdf
-   ```
-   > Adjust this list to match your actual `requirements.txt` if one exists in the repo.
-
-## Running the project
+### Setup
 
 ```bash
 cd backend
+python -m venv venv
+```
+
+Activate the environment:
+
+```bash
+# Windows PowerShell
+.\venv\Scripts\Activate.ps1
+
+# macOS / Linux
+source venv/bin/activate
+```
+
+Install the backend dependencies:
+
+```bash
+pip install fastapi "uvicorn[standard]" python-multipart pypdf sqlalchemy requests
+```
+
+Start the application:
+
+```bash
 uvicorn main:app --reload
 ```
 
-Backend **and** frontend are both served from:
-```
-http://127.0.0.1:8000
-```
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). The FastAPI application serves both the API and the uPrint frontend.
 
-### Why a single server
+## Printing prices
 
-Earlier versions served the frontend separately via a dev server (e.g. VS Code Live Server) on port `5500`. That caused two problems: cross-origin requests needing CORS, and the dev server's file watcher triggering full-page reloads whenever a new PDF was saved into `backend/uploads/`, which reset in-progress UI state mid-order. The fix was to serve the frontend directly from FastAPI:
+| Print type | A4 rate | A3 rate |
+|---|---:|---:|
+| B&W | ₹2 per page | ₹4 per page |
+| Colour | ₹10 per page | ₹20 per page |
 
-```python
-# at the very end of backend/main.py, after all app.include_router(...) calls
-from fastapi.staticfiles import StaticFiles
+The total is calculated as `pages × copies × price per page`. The interface accepts from 1 to 50 copies.
 
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="frontend")
-```
+## API overview
 
-Everything now runs from one origin, so no CORS configuration or second dev server is required. If you ever do split the frontend onto a different origin/port again, add `CORSMiddleware` in `main.py` and explicitly allow that origin.
-
-## API reference
-
-Base URL: `http://127.0.0.1:8000`
-
-### Health
-
-| Method | Path | Description |
+| Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/health` | Basic health check |
+| `GET` | `/health` | Confirm that the service is available. |
+| `POST` | `/upload-pdf` | Upload a PDF as multipart form field `file`. |
+| `GET` | `/calculate-pdf-price` | Calculate a document price from its `file_id` and options. |
+| `POST` | `/create-order` | Create an order from an uploaded document. |
+| `GET` | `/order/{order_id}` | Retrieve an order and its actual print status. |
+| `POST` | `/order/{order_id}/queue` | Queue a pending order. |
+| `GET` | `/print-queue` | List queued print jobs. |
+| `POST` | `/order/{order_id}/start-printing` | Mark a queued order as printing. |
+| `POST` | `/order/{order_id}/complete-printing` | Mark a printing order as completed. |
+| `POST` | `/order/{order_id}/fail-printing` | Mark a printing order as failed. |
 
-### Upload
+`/create-order` and `/calculate-pdf-price` support these query parameters: `file_id`, `copies`, `print_type` (`bw` or `color`), `paper_size` (`a4` or `a3`), `sides` (`single` or `double`), and `orientation` (`portrait` or `landscape`).
 
-| Method | Path | Description |
-|---|---|---|
-| POST | `/upload-pdf` | Upload a PDF (`multipart/form-data`, field name `file`). Returns a `file_id`, page count, and file size. |
+## Order lifecycle
 
-**Example response**
-```json
-{
-  "message": "PDF uploaded successfully",
-  "file_id": "4aa9bf3b-0dba-4eb2-a9b5-d80ae3e3a751",
-  "filename": "3rd sem result.pdf",
-  "pages": 2,
-  "file_size_bytes": 512275
-}
-```
-
-### Orders
-
-| Method | Path | Description |
-|---|---|---|
-| POST | `/create-order` | Create an order from an uploaded file. Query params: `file_id`, `copies`, `print_type` (`bw` or `color`). |
-| GET | `/order/{order_id}` | Fetch a single order by ID. |
-| POST | `/order/{order_id}/queue` | Move an order into the print queue. |
-| GET | `/print-queue` | List all queued orders. |
-| POST | `/order/{order_id}/start-printing` | Mark an order as printing (called by the print worker). |
-| POST | `/order/{order_id}/complete-printing` | Mark an order as completed. |
-| POST | `/order/{order_id}/fail-printing` | Mark an order as failed. Only valid while an order is `printing` — see below. |
-
-**Example order**
-```json
-{
-  "message": "Order created successfully",
-  "order_id": "ERB-C8C0F4DC",
-  "file_id": "4aa9bf3b-0dba-4eb2-a9b5-d80ae3e3a751",
-  "pages": 2,
-  "copies": 1,
-  "print_type": "bw",
-  "amount": 4,
-  "payment_status": "pending",
-  "print_status": "pending"
-}
-```
-
-## Order status lifecycle
-
-```
+```text
 pending → queued → printing → completed
-                        │
-                        └──→ failed
+                     └──────→ failed
 ```
 
-An order can only be marked `failed` while it is `printing`. Attempting to fail an already-`completed` order correctly returns a `400` — this is expected validation, not a bug:
-```json
-{ "detail": "Order cannot be marked as failed. Current status: completed" }
-```
+uPrint’s workflow animation is informational. The order tracking card always displays the real `print_status` returned by the API and never marks an order as printed or collected on its own.
 
-## Pricing
+## Print worker and printer integration
 
-| Type | Rate |
-|---|---|
-| B&W | ₹2 / page |
-| Color | ₹10 / page |
+The print worker polls the queue, downloads the relevant PDF, updates order state, and sends jobs to the configured printer. It is intended for Raspberry Pi deployments with CUPS and supports the Epson L3210 configuration used by this project. Keep the worker and printer configuration aligned with the local deployment before enabling live printing.
 
-Price is calculated client-side in `app.js`: `pages × copies × price_per_page`, and recalculated live whenever the print type or copy count changes.
+## Current scope
 
-## Frontend notes
+- Payments and authentication are not implemented.
+- PDFs and the SQLite database are stored locally.
+- The frontend preserves the existing backend routes and request/response formats.
 
-- `app.js` drives the full flow: file select → upload → show options → calculate price → place order → show result.
-- All interactive buttons (`orderBtn`, `minusBtn`, `plusBtn`) are `type="button"`, which prevents accidental form submission or page reload.
-- Errors surface in `#errorMessage` and are only cleared on the next user action (new file, retrying the order) — never on a timer.
-- `optionsCard` and `orderCard` are toggled via a shared `.hidden { display: none }` class in `style.css`.
+## Development branch
 
-## Quick manual test (curl)
-
-```bash
-# 1. Upload a PDF
-curl -X POST http://127.0.0.1:8000/upload-pdf \
-  -F "file=@/path/to/your/file.pdf"
-
-# 2. Create an order (use the file_id returned above)
-curl -X POST "http://127.0.0.1:8000/create-order?file_id=<FILE_ID>&copies=1&print_type=bw"
-
-# 3. Queue the order (use the order_id returned above)
-curl -X POST "http://127.0.0.1:8000/order/<ORDER_ID>/queue"
-
-# 4. Check the queue
-curl http://127.0.0.1:8000/print-queue
-```
-
-## Raspberry Pi print worker
-
-The worker (in `raspberry-pi/`) polls `/print-queue`, downloads the PDF for each queued order, and prints it — currently running in **simulation mode**, which logs each page instead of sending it to a real printer:
-
-```
-ERB PRINT WORKER
-Simulation mode: True
-
-New print job received
-PDF downloaded successfully
-Printing started
-Simulating page 1/2
-Simulating page 2/2
-Simulation finished
-Printing completed
-```
-
-On success it calls `/order/{order_id}/complete-printing`; on failure it should call `/order/{order_id}/fail-printing` while the order is still `printing`.
-
-## Roadmap
-
-- [ ] Payment integration (timing relative to order placement TBD)
-- [ ] Raspberry Pi print worker: replace simulation mode with real printer calls
-- [ ] Admin dashboard for queue monitoring
-- [ ] Order history / lookup
-- [ ] Receipt or pickup/collection code
-
-## Known limitations
-
-- No authentication — anyone with access to the URL can upload and place orders.
-- No payment gateway yet; every order is created with `payment_status: "pending"`.
-- Print worker currently runs in simulation mode only, not connected to a physical printer.
-- License: not yet decided.
+Frontend redesign work is maintained on `redesign/uprint-purple-v1`. See [docs/VERSION_HISTORY.md](docs/VERSION_HISTORY.md) for recovery and checkpoint information.
