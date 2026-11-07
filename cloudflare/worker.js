@@ -100,6 +100,39 @@ async function handleApi(request, env) {
     }
   }
 
+  // Raspberry Pi-only PDF download endpoint. Configure PI_DEVICE_TOKEN as a Worker secret.
+  const downloadMatch = path.match(/^\\/download-pdf\\/([0-9a-f-]{36})$/i);
+  if (downloadMatch && request.method === "GET") {
+    const expectedToken = env.PI_DEVICE_TOKEN;
+    const authorization = request.headers.get("Authorization") || "";
+    if (!expectedToken) {
+      return apiJson(request, { detail: "Print worker authentication is not configured." }, 503);
+    }
+    if (authorization !== `Bearer ${expectedToken}`) {
+      return apiJson(request, { detail: "Unauthorized print worker." }, 401);
+    }
+
+    const file = await env.DB.prepare(
+      "SELECT original_filename, object_key FROM files WHERE id = ? AND deleted_at IS NULL AND (delete_after IS NULL OR delete_after > datetime('now'))"
+    ).bind(downloadMatch[1]).first();
+    if (!file) return apiJson(request, { detail: "PDF not found or expired." }, 404);
+
+    const storedObject = await env.PDF_STORAGE.get(file.object_key);
+    if (!storedObject) return apiJson(request, { detail: "PDF is no longer available in temporary storage." }, 404);
+
+    const safeFilename = (file.original_filename || "document.pdf").replace(/[\\r\\n"]/g, "_");
+    return new Response(storedObject.body, {
+      status: 200,
+      headers: {
+        "content-type": "application/pdf",
+        "content-disposition": `attachment; filename="${safeFilename}"; filename*=UTF-8''${encodeURIComponent(safeFilename)}`,
+        "content-length": String(storedObject.size),
+        "cache-control": "private, no-store",
+        "x-content-type-options": "nosniff",
+      },
+    });
+  }
+
   if (path === "/calculate-pdf-price" && request.method === "GET") {
     const fileId = url.searchParams.get("file_id");
     const copies = Number(url.searchParams.get("copies") || 1);
