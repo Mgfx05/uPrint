@@ -237,7 +237,8 @@ export default {
       return handleApi(new Request(url, request), env);
     }
     if (["/health", "/upload-pdf", "/calculate-pdf-price", "/create-order"].includes(url.pathname) ||
-        url.pathname.startsWith("/order/")) {
+        url.pathname.startsWith("/order/") ||
+        url.pathname.startsWith("/download-pdf/")) {
       return handleApi(request, env);
     }
     return new Response("uPrint API is running.", { status: 200 });
