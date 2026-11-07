@@ -5,7 +5,7 @@ console.log("🔥 ERB APP.JS LOADED");
 // API
 // ============================================================
 
-const API_URL = "";
+const API_URL = "https://uprint-api.getuprint.workers.dev";
 
 
 // ============================================================
@@ -366,11 +366,11 @@ pdfFile.addEventListener("change", async function () {
 
     }
 
-    // Check file size (50 MB)
-    if (file.size > 50 * 1024 * 1024) {
+    // Check file size (10 MB)
+    if (file.size > 10 * 1024 * 1024) {
 
         showError(
-            "File too large. Maximum size is 50 MB."
+            "File too large. Maximum size is 10 MB."
         );
 
         return;
