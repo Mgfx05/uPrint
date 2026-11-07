@@ -1,16 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 72" role="img" aria-labelledby="title desc">
-  <title id="title">uPrint — Unified Printing Interface</title>
-  <desc id="desc">Purple document symbol and uPrint wordmark with U Pi identity.</desc>
-  <defs>
-    <linearGradient id="purple" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#a20ce0"/>
-      <stop offset="1" stop-color="#5410a5"/>
-    </linearGradient>
-  </defs>
-  <g fill="none" stroke="url(#purple)" stroke-linecap="round" stroke-linejoin="round" stroke-width="5">
-    <path d="M24 8h28a11 11 0 0 1 11 11v33a11 11 0 0 1-11 11H19A11 11 0 0 1 8 52V24L24 8Z"/>
-    <path d="M25 27h25M25 38h25M25 49h18"/>
-  </g>
-  <text x="78" y="49" fill="#17112b" font-family="Inter,Arial,sans-serif" font-size="43" font-weight="800" letter-spacing="-2">uPrint</text>
-  <text x="81" y="65" fill="#6b21a8" font-family="Inter,Arial,sans-serif" font-size="8" font-weight="700" letter-spacing="1.1">UNIFIED PRINTING INTERFACE</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" role="img" aria-labelledby="title">
+  <title id="title">uPrint document symbol</title>
+  <defs><linearGradient id="purple" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a20ce0"/><stop offset="1" stop-color="#5410a5"/></linearGradient></defs>
+  <path d="M22 7h30a12 12 0 0 1 12 12v34a12 12 0 0 1-12 12H18A12 12 0 0 1 6 53V23L22 7Z" fill="none" stroke="url(#purple)" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M23 27h27M23 38h27M23 49h19" fill="none" stroke="url(#purple)" stroke-width="5" stroke-linecap="round"/>
 </svg>
