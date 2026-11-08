@@ -5,7 +5,7 @@ console.log("🔥 ERB APP.JS LOADED");
 // API
 // ============================================================
 
-const API_URL = "";
+const API_URL = String(window.UPRINT_API_URL || "").replace(/\\/$/, "");
 
 
 // ============================================================
