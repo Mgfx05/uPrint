@@ -6,6 +6,8 @@ from config import UPLOAD_DIR
 from models.database import SessionLocal
 from models.order import Order
 from pypdf import PdfReader
+from fastapi import Depends
+from security import require_print_device
 
 
 router = APIRouter()
@@ -166,7 +168,7 @@ def queue_order(order_id: str):
 # ============================================================
 
 @router.get("/print-queue")
-def get_print_queue():
+def get_print_queue(_: None = Depends(require_print_device)):
 
     db: Session = SessionLocal()
 
@@ -204,7 +206,7 @@ def get_print_queue():
 # ============================================================
 
 @router.get("/print-queue/next")
-def get_next_print_job():
+def get_next_print_job(_: None = Depends(require_print_device)):
 
     db: Session = SessionLocal()
 
@@ -247,7 +249,7 @@ def get_next_print_job():
 # ============================================================
 
 @router.post("/order/{order_id}/start-printing")
-def start_printing(order_id: str):
+def start_printing(order_id: str, _: None = Depends(require_print_device)):
 
     db: Session = SessionLocal()
 
@@ -288,7 +290,7 @@ def start_printing(order_id: str):
 # ============================================================
 
 @router.post("/order/{order_id}/complete-printing")
-def complete_printing(order_id: str):
+def complete_printing(order_id: str, _: None = Depends(require_print_device)):
 
     db: Session = SessionLocal()
 
@@ -331,7 +333,8 @@ def complete_printing(order_id: str):
 @router.post("/order/{order_id}/fail-printing")
 def fail_printing(
     order_id: str,
-    reason: str = "Unknown printing error"
+    reason: str = "Unknown printing error",
+    _: None = Depends(require_print_device),
 ):
 
     db: Session = SessionLocal()
