@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import uuid
 
 from services.storage import pdf_storage
+from config import UPLOAD_DIR
 from models.database import SessionLocal
 from models.order import Order
 from pypdf import PdfReader
@@ -26,16 +27,17 @@ def create_order(
     sides: str = "single",
     orientation: str = "portrait"
 ):
-    file_path = pdf_storage.path_for(file_id)
+    try:
+        file_path = pdf_storage.materialize(file_id)
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="PDF not found")
 
-    if not file_path.exists():
-        raise HTTPException(
-            status_code=404,
-            detail="PDF not found"
-        )
-
-    pdf = PdfReader(file_path)
-    pages = len(pdf.pages)
+    try:
+        pdf = PdfReader(file_path)
+        pages = len(pdf.pages)
+    finally:
+        if file_path.parent != UPLOAD_DIR:
+            file_path.unlink(missing_ok=True)
 
     price_per_page = 10 if print_type == "color" else 2
     if paper_size == "a3":
