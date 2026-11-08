@@ -1,0 +1,26 @@
+[Unit]
+Description=uPrint Raspberry Pi print worker
+After=network-online.target uprint-api.service cups.service
+Wants=network-online.target
+Requires=uprint-api.service
+
+[Service]
+Type=simple
+User=REPLACE_WITH_PI_USERNAME
+Group=REPLACE_WITH_PI_USERNAME
+SupplementaryGroups=lp
+WorkingDirectory=/home/REPLACE_WITH_PI_USERNAME/uPrint/backend
+EnvironmentFile=/etc/uprint/uprint.env
+ExecStart=/home/REPLACE_WITH_PI_USERNAME/uPrint/.venv/bin/python /home/REPLACE_WITH_PI_USERNAME/uPrint/backend/print_worker.py
+Restart=always
+RestartSec=10
+TimeoutStopSec=30
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=false
+ReadWritePaths=/home/REPLACE_WITH_PI_USERNAME/uPrint/backend
+
+[Install]
+WantedBy=multi-user.target
