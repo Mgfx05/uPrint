@@ -27,12 +27,15 @@ sudo chmod 600 /etc/uprint/uprint.env
 
 Edit `/etc/uprint/uprint.env`: set the actual absolute paths, generate a strong DEVICE_TOKEN, and set CORS_ORIGINS to the deployed Pages origin. Never commit the real environment file or token.
 
-Copy `backend/deploy/uprint-api.service.example` to `/etc/systemd/system/uprint-api.service`, replace the username and repository path in it, then run:
+Copy `backend/deploy/uprint-api.service.example` to `/etc/systemd/system/uprint-api.service` and `backend/deploy/uprint-worker.service.example` to `/etc/systemd/system/uprint-worker.service`. Replace the username and repository path in both files. The worker service uses the `lp` supplementary group so it can submit jobs to CUPS. Then run:
 
 ```bash
 sudo systemctl daemon-reload
+sudo systemctl daemon-reload
 sudo systemctl enable --now uprint-api
+sudo systemctl enable --now uprint-worker
 sudo systemctl status uprint-api
+sudo systemctl status uprint-worker
 curl http://127.0.0.1:8000/health
 ```
 
@@ -51,3 +54,12 @@ sudo journalctl -u uprint-api -f
 5. Keep CUPS and SSH private; do not create public port-forwarding rules.
 
 The service template intentionally uses placeholders. It is not ready to install until paths and the Linux username are replaced.
+
+
+Worker logs:
+
+```bash
+sudo journalctl -u uprint-worker -f
+```
+
+The worker uses `UPRINT_SERVER_URL=http://127.0.0.1:8000` and does not depend on the public tunnel. During an internet outage, it cannot receive new customer orders or report status, but the local API, database, stored PDFs, and CUPS remain on the Pi. Once connectivity returns, the Cloudflare connector reconnects and the worker can resume communicating with the API. Do not blindly retry a print whose physical outcome is uncertain.
