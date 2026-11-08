@@ -7,6 +7,8 @@ from models.database import SessionLocal
 from models.order import Order
 from pypdf import PdfReader
 from fastapi import Depends
+from datetime import datetime, timedelta
+from sqlalchemy import or_
 from security import require_print_device
 
 
@@ -211,6 +213,19 @@ def get_next_print_job(_: None = Depends(require_print_device)):
     db: Session = SessionLocal()
 
     try:
+        # Return abandoned claims to the queue after a short lease window.
+        # This only recovers jobs that were claimed but never started.
+        lease_expiry = datetime.utcnow() - timedelta(minutes=2)
+        db.query(Order).filter(
+            Order.print_status == "claimed",
+            Order.claimed_at.isnot(None),
+            Order.claimed_at < lease_expiry,
+        ).update(
+            {Order.print_status: "queued", Order.claimed_at: None},
+            synchronize_session=False,
+        )
+        db.commit()
+
         # Find the oldest queued job, then atomically transition it to
         # claimed. The conditional UPDATE ensures only one worker wins.
         order = db.query(Order).filter(
@@ -229,7 +244,7 @@ def get_next_print_job(_: None = Depends(require_print_device)):
             Order.id == order.id,
             Order.print_status == "queued"
         ).update(
-            {Order.print_status: "claimed"},
+            {Order.print_status: "claimed", Order.claimed_at: datetime.utcnow()},
             synchronize_session=False
         )
         db.commit()
