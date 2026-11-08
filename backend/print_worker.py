@@ -15,7 +15,9 @@ DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 PRINTER_NAME = os.getenv("UPRINT_PRINTER_NAME", "Epson_L3210")
 SIMULATION_MODE = os.getenv("UPRINT_SIMULATION_MODE", "false").lower() == "true"
-POLL_INTERVAL_SECONDS = int(os.getenv("UPRINT_POLL_INTERVAL_SECONDS", "5"))
+POLL_INTERVAL_SECONDS = max(1, int(os.getenv("UPRINT_POLL_INTERVAL_SECONDS", "5")))
+MAX_POLL_BACKOFF_SECONDS = max(POLL_INTERVAL_SECONDS, int(os.getenv("UPRINT_MAX_POLL_BACKOFF_SECONDS", "60")))
+NETWORK_BACKOFF_MULTIPLIER = 2
 REQUEST_TIMEOUT = (10, 60)
 
 SUPPORTED_PRINTERS = {"MF3010", "Epson_L3210"}
@@ -176,11 +178,20 @@ def main():
     print("Server:", SERVER_URL)
     print("Printer:", PRINTER_NAME)
 
+    backoff_seconds = POLL_INTERVAL_SECONDS
+
     while True:
         job = get_next_job()
         if job is None:
-            time.sleep(POLL_INTERVAL_SECONDS)
+            # Empty queue and temporary API/network errors both wait safely.
+            time.sleep(backoff_seconds)
+            backoff_seconds = min(
+                backoff_seconds * NETWORK_BACKOFF_MULTIPLIER,
+                MAX_POLL_BACKOFF_SECONDS,
+            )
             continue
+
+        backoff_seconds = POLL_INTERVAL_SECONDS
         try:
             process_job(job)
         except Exception as error:
