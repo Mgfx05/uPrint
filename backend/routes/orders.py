@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import Session
 import uuid
 
-from config import UPLOAD_DIR
+from services.storage import pdf_storage
 from models.database import SessionLocal
 from models.order import Order
 from pypdf import PdfReader
@@ -26,7 +26,7 @@ def create_order(
     sides: str = "single",
     orientation: str = "portrait"
 ):
-    file_path = UPLOAD_DIR / f"{file_id}.pdf"
+    file_path = pdf_storage.path_for(file_id)
 
     if not file_path.exists():
         raise HTTPException(
