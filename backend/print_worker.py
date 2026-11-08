@@ -1,239 +1,122 @@
-import requests
-import time
-import subprocess
 import os
+import subprocess
+import time
 from pathlib import Path
 
-
-# ============================================================
-# ERB PRINT WORKER
-# ============================================================
+import requests
+from pypdf import PdfReader
 
 SERVER_URL = os.getenv("UPRINT_SERVER_URL", "http://127.0.0.1:8000").rstrip("/")
 DEVICE_TOKEN = os.getenv("UPRINT_DEVICE_TOKEN", "")
 REQUEST_HEADERS = {"X-Device-Token": DEVICE_TOKEN} if DEVICE_TOKEN else {}
 
-DOWNLOAD_DIR = Path("worker_downloads")
-DOWNLOAD_DIR.mkdir(exist_ok=True)
+DOWNLOAD_DIR = Path(os.getenv("UPRINT_WORKER_DOWNLOAD_DIR", "worker_downloads"))
+DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-PRINTER_NAME = "Epson_L3210"
+PRINTER_NAME = os.getenv("UPRINT_PRINTER_NAME", "Epson_L3210")
+SIMULATION_MODE = os.getenv("UPRINT_SIMULATION_MODE", "false").lower() == "true"
+POLL_INTERVAL_SECONDS = int(os.getenv("UPRINT_POLL_INTERVAL_SECONDS", "5"))
+REQUEST_TIMEOUT = (10, 60)
 
-SIMULATION_MODE = False
+SUPPORTED_PRINTERS = {"MF3010", "Epson_L3210"}
 
 
-# ============================================================
-# GET NEXT PRINT JOB
-# ============================================================
+def request(method, path, **kwargs):
+    """Make an authenticated request and consistently apply timeouts."""
+    if not DEVICE_TOKEN:
+        print("❌ UPRINT_DEVICE_TOKEN is not configured")
+        return None
+    try:
+        response = requests.request(
+            method,
+            f"{SERVER_URL}{path}",
+            headers=REQUEST_HEADERS,
+            timeout=REQUEST_TIMEOUT,
+            **kwargs,
+        )
+        return response
+    except requests.RequestException as error:
+        print(f"🌐 Network request failed: {error}")
+        return None
+
 
 def get_next_job():
-
+    response = request("GET", "/print-queue/next")
+    if response is None:
+        return None
+    if response.status_code != 200:
+        print(f"❌ Queue request failed: HTTP {response.status_code}")
+        return None
     try:
-
-        response = requests.get(
-            f"{SERVER_URL}/print-queue/next",
-            headers=REQUEST_HEADERS,
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-
-            print("❌ Could not check print queue")
-
-            return None
-
-        data = response.json()
-
-        if data.get("job") is None:
-
-            return None
-
-        return data["job"]
-
-    except requests.exceptions.ConnectionError:
-
-        print("❌ ERB server is not running")
-
+        return response.json().get("job")
+    except ValueError:
+        print("❌ Queue returned invalid JSON")
         return None
 
-
-# ============================================================
-# DOWNLOAD PDF
-# ============================================================
 
 def download_pdf(file_id):
+    response = request("GET", f"/download-pdf/{file_id}")
+    if response is None or response.status_code != 200:
+        status = response.status_code if response is not None else "network error"
+        print(f"❌ PDF download failed: {status}")
+        return None
 
+    file_path = DOWNLOAD_DIR / f"{file_id}.pdf"
     try:
-
-        response = requests.get(
-            f"{SERVER_URL}/download-pdf/{file_id}",
-            headers=REQUEST_HEADERS,
-            timeout=60,
-        )
-
-        if response.status_code != 200:
-
-            print("❌ PDF download failed")
-
+        file_path.write_bytes(response.content)
+        if not file_path.read_bytes().startswith(b"%PDF-"):
+            file_path.unlink(missing_ok=True)
+            print("❌ Downloaded file is not a PDF")
             return None
-
-        file_path = DOWNLOAD_DIR / f"{file_id}.pdf"
-
-        with open(file_path, "wb") as file:
-
-            file.write(response.content)
-
-        print("✅ PDF downloaded successfully")
-
+        reader = PdfReader(str(file_path), strict=True)
+        if len(reader.pages) < 1:
+            file_path.unlink(missing_ok=True)
+            print("❌ Downloaded PDF has no pages")
+            return None
         return file_path
-
-    except requests.exceptions.ConnectionError:
-
-        print("❌ Could not connect to ERB server")
-
+    except Exception as error:
+        file_path.unlink(missing_ok=True)
+        print(f"❌ Could not validate downloaded PDF: {error}")
         return None
 
 
-# ============================================================
-# START PRINTING
-# ============================================================
+def update_status(action, order_id, **params):
+    response = request("POST", f"/order/{order_id}/{action}", params=params)
+    if response is None:
+        return False
+    if response.status_code != 200:
+        print(f"❌ Status update failed: HTTP {response.status_code} {response.text}")
+        return False
+    return True
+
 
 def start_printing(order_id):
+    return update_status("start-printing", order_id)
 
-    try:
-
-        response = requests.post(
-            f"{SERVER_URL}/order/{order_id}/start-printing",
-            headers=REQUEST_HEADERS,
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-
-            print("❌ Could not start printing")
-
-            print(response.text)
-
-            return False
-
-        print("🖨️ Printing started")
-
-        return True
-
-    except requests.exceptions.ConnectionError:
-
-        print("❌ Could not connect to ERB server")
-
-        return False
-
-
-# ============================================================
-# COMPLETE PRINTING
-# ============================================================
 
 def complete_printing(order_id):
-
-    try:
-
-        response = requests.post(
-            f"{SERVER_URL}/order/{order_id}/complete-printing",
-            headers=REQUEST_HEADERS,
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-
-            print("❌ Could not complete printing")
-
-            print(response.text)
-
-            return False
-
-        print("✅ Printing completed")
-
-        return True
-
-    except requests.exceptions.ConnectionError:
-
-        print("❌ Could not connect to ERB server")
-
-        return False
+    return update_status("complete-printing", order_id)
 
 
-# ============================================================
-# FAIL PRINTING
-# ============================================================
-
-def fail_printing(order_id):
-
-    try:
-
-        response = requests.post(
-            f"{SERVER_URL}/order/{order_id}/fail-printing",
-            headers=REQUEST_HEADERS,
-            timeout=20,
-        )
-
-        if response.status_code != 200:
-
-            print("❌ Could not mark printing as failed")
-
-            print(response.text)
-
-            return False
-
-        print("❌ Printing marked as failed")
-
-        return True
-
-    except requests.exceptions.ConnectionError:
-
-        print("❌ Could not connect to ERB server")
-
-        return False
-
-
-
-# ============================================================
-# PRINT PDF USING CUPS
-# ============================================================
-
-SUPPORTED_PRINTERS = {
-    "MF3010",
-    "Epson_L3210",
-}
+def fail_printing(order_id, reason="Worker could not submit the job to CUPS"):
+    return update_status("fail-printing", order_id, reason=reason)
 
 
 def print_pdf(pdf_path, job):
     copies = int(job.get("copies", 1))
-
-    # Use the printer selected for this job.
-    # If none is specified, keep using the existing default.
     printer_name = job.get("printer_name") or PRINTER_NAME
 
     if printer_name not in SUPPORTED_PRINTERS:
         print("Unsupported printer:", printer_name)
         return False
-
-    if copies < 1:
+    if not 1 <= copies <= 50:
         print("Invalid number of copies:", copies)
         return False
 
-    command = [
-        "lp",
-        "-d", printer_name,
-        "-n", str(copies),
-    ]
-
-    # Black-and-white printing
+    command = ["lp", "-d", printer_name, "-n", str(copies)]
     if job.get("print_type") == "bw":
         command.extend(["-o", "ColorModel=Gray"])
-
     command.append(str(pdf_path))
-
-    print("\nSending PDF to CUPS...")
-    print("Printer:", printer_name)
-    print("Copies:", copies)
-    print("File:", pdf_path)
 
     try:
         result = subprocess.run(
@@ -243,168 +126,68 @@ def print_pdf(pdf_path, job):
             timeout=120,
             check=False,
         )
-
         if result.returncode != 0:
-            print("CUPS printing failed")
-            print(result.stderr)
+            print("CUPS printing failed:", result.stderr)
             return False
-
-        print("CUPS accepted print job")
-        print(result.stdout.strip())
+        print("CUPS accepted print job:", result.stdout.strip())
         return True
+    except (subprocess.TimeoutExpired, OSError) as error:
+        print(f"Print submission outcome may be uncertain: {error}")
+        return None
 
-    except Exception as error:
-        print("Printing error:", error)
-        return False
-
-
-
-# ============================================================
-# PROCESS ONE JOB
-# ============================================================
 
 def process_job(job):
-
     order_id = job["order_id"]
-
     file_id = job["file_id"]
-
-    print("")
-
-    print("========================================")
-
-    print("📥 NEW PRINT JOB")
-
-    print("========================================")
-
-    print("Order ID   :", order_id)
-
-    print("Pages      :", job["pages"])
-
-    print("Copies     :", job["copies"])
-
-    print("Print Type :", job["print_type"])
-
-    print("Amount     :", f"₹{job['amount']}")
-
-    print("========================================")
-
-    # --------------------------------------------------------
-    # DOWNLOAD PDF
-    # --------------------------------------------------------
+    print(f"📥 Claimed job {order_id}")
 
     pdf_path = download_pdf(file_id)
-
     if pdf_path is None:
-
-        fail_printing(order_id)
-
+        # The job has not been sent to the printer. Mark failure if possible;
+        # if the network is down, claim expiry will recover it.
+        fail_printing(order_id, "PDF download or validation failed")
         return
-
-    print("📄 PDF saved to:", pdf_path)
-
-    # --------------------------------------------------------
-    # START PRINTING
-    # --------------------------------------------------------
 
     if not start_printing(order_id):
-
+        print("Could not confirm printing state; not submitting to printer.")
         return
 
-    # --------------------------------------------------------
-    # PRINT
-    # --------------------------------------------------------
-
     if SIMULATION_MODE:
-
-        print("")
-
-        print("⚠️ SIMULATION MODE")
-
-        total_pages = job["pages"] * job["copies"]
-
-        for page in range(1, total_pages + 1):
-
-            print(
-                f"🖨️ Simulating page "
-                f"{page}/{total_pages}"
-            )
-
-            time.sleep(1)
-
+        print("⚠️ Simulation mode: no physical print will be submitted.")
         success = True
-
     else:
+        success = print_pdf(pdf_path, job)
 
-        success = print_pdf(
-            pdf_path,
-            job
-        )
-
-    # --------------------------------------------------------
-    # UPDATE ORDER STATUS
-    # --------------------------------------------------------
-
-    if success:
-
-        complete_printing(order_id)
-
-    else:
-
+    if success is True:
+        if not complete_printing(order_id):
+            print("⚠️ CUPS accepted the job, but cloud completion update failed.")
+            print("Do not automatically reprint this order; operator review is required.")
+    elif success is False:
         fail_printing(order_id)
+    else:
+        # None means a timeout/ambiguous CUPS result. Do not report failure
+        # because the printer may have accepted the job.
+        print("⚠️ Print outcome uncertain. Manual operator review required.")
 
-
-# ============================================================
-# WORKER LOOP
-# ============================================================
 
 def main():
-
-    print("")
-
-    print("🍓 ERB PRINT WORKER")
-
-    print("===================")
-
+    print("🖨️ uPrint worker")
     print("Simulation mode:", SIMULATION_MODE)
-
     print("Server:", SERVER_URL)
-
     print("Printer:", PRINTER_NAME)
 
-    print("")
-
     while True:
-
-        print("🔍 Checking print queue...")
-
         job = get_next_job()
-
         if job is None:
-
-            print("📭 No print jobs")
-
-            print("")
-
-            time.sleep(5)
-
+            time.sleep(POLL_INTERVAL_SECONDS)
             continue
-
-        process_job(job)
-
-        print("")
-
-        print("🔄 Checking for next job...")
-
-        print("")
-
+        try:
+            process_job(job)
+        except Exception as error:
+            # Do not blindly requeue or reprint after an unexpected failure.
+            print(f"⚠️ Unexpected job processing error: {error}")
         time.sleep(2)
 
 
-# ============================================================
-# START WORKER
-# ============================================================
-
 if __name__ == "__main__":
-
     main()
