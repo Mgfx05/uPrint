@@ -5,7 +5,8 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 import uuid
 
-from config import UPLOAD_DIR, MAX_UPLOAD_BYTES
+from config import MAX_UPLOAD_BYTES
+from services.storage import pdf_storage
 from security import require_print_device
 
 router = APIRouter()
@@ -17,7 +18,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
     file_id = str(uuid.uuid4())
-    file_path = UPLOAD_DIR / f"{file_id}.pdf"
+    file_path = pdf_storage.path_for(file_id)
     total_bytes = 0
     header = b""
 
