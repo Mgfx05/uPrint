@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import inspect, text
 
 from routes.health import router as health_router
 from routes.upload import router as upload_router
@@ -15,6 +16,12 @@ from models.order import Order
 # ============================================================
 
 Base.metadata.create_all(bind=engine)
+# Additive schema compatibility: preserve existing order rows.
+with engine.begin() as connection:
+    columns = {column['name'] for column in inspect(connection).get_columns('orders')}
+    if 'claimed_at' not in columns:
+        connection.execute(text('ALTER TABLE orders ADD COLUMN claimed_at TIMESTAMP NULL'))
+
 
 
 # ============================================================
