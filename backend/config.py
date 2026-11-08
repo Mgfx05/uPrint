@@ -12,3 +12,7 @@ UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(BACKEND_DIR / "uploads"))).expandu
 MAX_UPLOAD_BYTES = int(os.getenv("MAX_UPLOAD_BYTES", str(50 * 1024 * 1024)))
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Shared secret for the single authorized Raspberry Pi print worker.
+# Keep this value out of source control and configure it in the backend environment.
+DEVICE_TOKEN = os.getenv("DEVICE_TOKEN", "")
