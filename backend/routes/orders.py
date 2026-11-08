@@ -8,7 +8,6 @@ from models.order import Order
 from pypdf import PdfReader
 from fastapi import Depends
 from datetime import datetime, timedelta
-from sqlalchemy import or_
 from security import require_print_device
 
 
