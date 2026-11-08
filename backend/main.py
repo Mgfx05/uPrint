@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from fastapi.middleware.cors import CORSMiddleware
 from config import CORS_ORIGINS
 from sqlalchemy import inspect, text
@@ -31,7 +32,7 @@ with engine.begin() as connection:
 # ============================================================
 
 app = FastAPI(
-    title="ERB - Easy Print & Collect",
+    title="uPrint - Unified Printing Interface",
     version="1.0.0"
 )
 
@@ -67,7 +68,7 @@ app.include_router(orders_router)
 app.mount(
     "/",
     StaticFiles(
-        directory="../frontend",
+        directory=str(Path(__file__).resolve().parent.parent / "frontend"),
         html=True
     ),
     name="frontend"
