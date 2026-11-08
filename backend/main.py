@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from config import CORS_ORIGINS
 from sqlalchemy import inspect, text
 
 from routes.health import router as health_router
@@ -32,6 +34,20 @@ app = FastAPI(
     title="ERB - Easy Print & Collect",
     version="1.0.0"
 )
+
+
+# ============================================================
+# Allow browser requests only from explicitly configured frontend origins.
+# ============================================================
+
+if CORS_ORIGINS:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=CORS_ORIGINS,
+        allow_credentials=False,
+        allow_methods=['GET', 'POST', 'OPTIONS'],
+        allow_headers=['Content-Type', 'X-Device-Token'],
+    )
 
 
 # ============================================================
