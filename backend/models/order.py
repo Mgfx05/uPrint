@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, DateTime
 
 from models.database import Base
 
@@ -35,3 +35,5 @@ class Order(Base):
         String,
         default="pending"
     )
+
+    claimed_at = Column(DateTime, nullable=True, index=True)
