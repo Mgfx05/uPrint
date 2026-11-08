@@ -16,3 +16,6 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 # Shared secret for the single authorized Raspberry Pi print worker.
 # Keep this value out of source control and configure it in the backend environment.
 DEVICE_TOKEN = os.getenv("DEVICE_TOKEN", "")
+
+# Comma-separated public frontend origins allowed to call this API.
+CORS_ORIGINS = [origin.strip() for origin in os.getenv('CORS_ORIGINS', '').split(',') if origin.strip()]
