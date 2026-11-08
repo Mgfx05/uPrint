@@ -211,22 +211,38 @@ def get_next_print_job(_: None = Depends(require_print_device)):
     db: Session = SessionLocal()
 
     try:
-        # Get the oldest queued order
+        # Find the oldest queued job, then atomically transition it to
+        # claimed. The conditional UPDATE ensures only one worker wins.
         order = db.query(Order).filter(
             Order.print_status == "queued"
         ).order_by(
             Order.id.asc()
         ).first()
 
-        # No jobs available
         if not order:
             return {
                 "message": "No print jobs available",
                 "job": None
             }
 
+        claimed = db.query(Order).filter(
+            Order.id == order.id,
+            Order.print_status == "queued"
+        ).update(
+            {Order.print_status: "claimed"},
+            synchronize_session=False
+        )
+        db.commit()
+
+        if claimed != 1:
+            return {
+                "message": "No print jobs available",
+                "job": None
+            }
+
+        db.refresh(order)
         return {
-            "message": "Print job available",
+            "message": "Print job claimed",
             "job": {
                 "order_id": order.order_id,
                 "file_id": order.file_id,
@@ -264,7 +280,7 @@ def start_printing(order_id: str, _: None = Depends(require_print_device)):
                 detail="Order not found"
             )
 
-        if order.print_status != "queued":
+        if order.print_status not in {"queued", "claimed"}:
             raise HTTPException(
                 status_code=400,
                 detail=f"Order cannot start printing. Current status: {order.print_status}"
@@ -352,7 +368,7 @@ def fail_printing(
             )
 
         # Only printing orders can be marked as failed
-        if order.print_status != "printing":
+        if order.print_status not in {"claimed", "printing"}:
             raise HTTPException(
                 status_code=400,
                 detail=f"Order cannot be marked as failed. Current status: {order.print_status}"
