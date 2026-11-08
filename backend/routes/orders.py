@@ -1,17 +1,14 @@
 from fastapi import APIRouter, HTTPException
 from sqlalchemy.orm import Session
-from pathlib import Path
 import uuid
 
+from config import UPLOAD_DIR
 from models.database import SessionLocal
 from models.order import Order
 from pypdf import PdfReader
 
 
 router = APIRouter()
-
-UPLOAD_DIR = Path("uploads")
-
 
 # ============================================================
 # CREATE ORDER
