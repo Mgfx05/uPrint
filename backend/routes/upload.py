@@ -1,15 +1,19 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import FileResponse
 from pathlib import Path
+from tempfile import NamedTemporaryFile
+from starlette.background import BackgroundTask
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 import uuid
 
-from config import MAX_UPLOAD_BYTES
+from config import MAX_UPLOAD_BYTES, UPLOAD_DIR
 from services.storage import pdf_storage
 from security import require_print_device
 
 router = APIRouter()
+UPLOAD_STAGING_DIR = UPLOAD_DIR / ".staging"
+UPLOAD_STAGING_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post("/upload-pdf")
@@ -18,7 +22,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Only PDF files are allowed")
 
     file_id = str(uuid.uuid4())
-    file_path = pdf_storage.path_for(file_id)
+    file_path = UPLOAD_STAGING_DIR / f"{file_id}.pdf"
     total_bytes = 0
     header = b""
 
@@ -43,6 +47,8 @@ async def upload_pdf(file: UploadFile = File(...)):
         if page_count < 1:
             raise HTTPException(status_code=400, detail="PDF contains no pages")
 
+        pdf_storage.save_file(file_id, file_path)
+
         return {
             "message": "PDF uploaded successfully",
             "file_id": file_id,
@@ -64,6 +70,7 @@ async def upload_pdf(file: UploadFile = File(...)):
             file_path.unlink()
         raise HTTPException(status_code=500, detail="Could not process PDF") from error
     finally:
+        file_path.unlink(missing_ok=True)
         await file.close()
 
 
@@ -74,12 +81,15 @@ def download_pdf(file_id: str, _: None = Depends(require_print_device)):
     except (ValueError, TypeError, AttributeError):
         raise HTTPException(status_code=404, detail="PDF not found")
 
-    file_path = UPLOAD_DIR / f"{safe_file_id}.pdf"
-    if not file_path.is_file():
+    try:
+        file_path = pdf_storage.materialize(safe_file_id)
+    except FileNotFoundError:
         raise HTTPException(status_code=404, detail="PDF not found")
 
+    background = BackgroundTask(file_path.unlink, missing_ok=True) if file_path.parent != UPLOAD_DIR else None
     return FileResponse(
         path=file_path,
         media_type="application/pdf",
         filename=f"{safe_file_id}.pdf",
+        background=background,
     )
