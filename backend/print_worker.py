@@ -1,6 +1,7 @@
 import requests
 import time
 import subprocess
+import os
 from pathlib import Path
 
 
@@ -8,7 +9,9 @@ from pathlib import Path
 # ERB PRINT WORKER
 # ============================================================
 
-SERVER_URL = "http://127.0.0.1:8000"
+SERVER_URL = os.getenv("UPRINT_SERVER_URL", "http://127.0.0.1:8000").rstrip("/")
+DEVICE_TOKEN = os.getenv("UPRINT_DEVICE_TOKEN", "")
+REQUEST_HEADERS = {"X-Device-Token": DEVICE_TOKEN} if DEVICE_TOKEN else {}
 
 DOWNLOAD_DIR = Path("worker_downloads")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
@@ -27,7 +30,9 @@ def get_next_job():
     try:
 
         response = requests.get(
-            f"{SERVER_URL}/print-queue/next"
+            f"{SERVER_URL}/print-queue/next",
+            headers=REQUEST_HEADERS,
+            timeout=20,
         )
 
         if response.status_code != 200:
@@ -60,7 +65,9 @@ def download_pdf(file_id):
     try:
 
         response = requests.get(
-            f"{SERVER_URL}/download-pdf/{file_id}"
+            f"{SERVER_URL}/download-pdf/{file_id}",
+            headers=REQUEST_HEADERS,
+            timeout=60,
         )
 
         if response.status_code != 200:
@@ -95,7 +102,9 @@ def start_printing(order_id):
     try:
 
         response = requests.post(
-            f"{SERVER_URL}/order/{order_id}/start-printing"
+            f"{SERVER_URL}/order/{order_id}/start-printing",
+            headers=REQUEST_HEADERS,
+            timeout=20,
         )
 
         if response.status_code != 200:
@@ -126,7 +135,9 @@ def complete_printing(order_id):
     try:
 
         response = requests.post(
-            f"{SERVER_URL}/order/{order_id}/complete-printing"
+            f"{SERVER_URL}/order/{order_id}/complete-printing",
+            headers=REQUEST_HEADERS,
+            timeout=20,
         )
 
         if response.status_code != 200:
@@ -157,7 +168,9 @@ def fail_printing(order_id):
     try:
 
         response = requests.post(
-            f"{SERVER_URL}/order/{order_id}/fail-printing"
+            f"{SERVER_URL}/order/{order_id}/fail-printing",
+            headers=REQUEST_HEADERS,
+            timeout=20,
         )
 
         if response.status_code != 200:
