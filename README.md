@@ -115,61 +115,67 @@ Previously documented prices were B&W A4 ₹2/page, B&W A3 ₹4/page, Colour A4 
 
 ## 4. Target online architecture
 
-The target architecture separates the public website, cloud backend, document storage, and physical print controller.
+The chosen deployment for the current demo is **Cloudflare Pages + Cloudflare Tunnel + FastAPI on the Raspberry Pi**. PDF files and the SQLite database stay on the Pi. No cloud object storage or hosted backend is part of this design.
 
 ```text
-CUSTOMER DEVICE
-(mobile data / home Wi-Fi / any internet)
+CUSTOMER DEVICE (any internet connection)
           |
           | HTTPS
           v
-CLOUDFLARE PAGES
-(public uPrint frontend)
+CLOUDFLARE PAGES (static uPrint website)
           |
-          | HTTPS API requests
+          | HTTPS API requests to api.<your-domain>
           v
-CLOUD BACKEND
-(FastAPI on a Python-compatible host)
+CLOUDFLARE EDGE
           |
-          +-------- PostgreSQL (recommended persistent data store)
+          | Cloudflare Tunnel (outbound connection from Pi)
+          v
+RASPBERRY PI 4
+  |-- cloudflared
+  |-- FastAPI bound to 127.0.0.1:8000
+  |-- SQLite database on local disk
+  |-- PDF uploads on local disk
+  |-- Python print worker
+  |-- CUPS
           |
-          +-------- Persistent print-job records
-          |
-          +-------- Private PDF object storage (R2 candidate)
-          |
-          +-------- Redis (optional coordination/cache; not source of truth)
-                         ^
-                         |
-             authenticated outbound HTTPS polling
-                         |
-RASPBERRY PI 4           |
-(separate internet) -----+
-  |
-  +-- Python print worker
-  +-- local temporary job files
-  +-- CUPS
-  |
-  v
-EPSON L3210 (USB)
+          v
+     EPSON L3210 (USB)
 ```
 
-### Responsibilities
+### Component responsibilities
 
 | Component | Responsibility |
 |---|---|
-| GitHub | Source control and reviewable change history |
-| Cloudflare Pages | Host the static frontend and deploy from Git |
-| FastAPI host | Run Python APIs, order logic and device/job endpoints |
-| PostgreSQL | Persistent orders, documents metadata, device identity and job state (recommended target; verify current DB first) |
-| Redis | Optional queue coordination, caching or short-lived locks; never the only copy of a job |
-| PDF storage | Private storage accessible to backend and authorized Pi worker |
-| Raspberry Pi | Retrieve jobs and control the local printer |
-| Python worker | Authenticate, claim, download, validate, print and report |
-| CUPS | Local printer interface on the Pi |
+| GitHub | Source control and reviewable changes |
+| Cloudflare Pages | Host the public static frontend |
+| Cloudflare Tunnel | Securely route public API requests to the Pi without port forwarding |
+| FastAPI on Pi | Upload, pricing, order, tracking and device APIs |
+| SQLite on Pi | Store demo order records |
+| Pi local filesystem | Store uploaded PDF files |
+| Python worker | Claim jobs and submit them to CUPS |
+| CUPS | Control the USB-connected Epson L3210 |
 
-Cloudflare Pages does not run the existing FastAPI application. The backend needs a separate host that supports the required Python runtime and persistent service operation. Evaluate pricing, storage, bandwidth, sleep/idle behaviour, background process support, and free-tier limits before choosing a provider. Do not promise that the complete platform will be free.
+The customer device and Pi may use completely different internet connections. The Pi initiates the tunnel connection outbound. FastAPI should listen on `127.0.0.1:8000`; do not expose port 8000, CUPS or SSH directly to the internet.
 
-Cloudflare Workers, D1, Groq, Gemini, and Cloudflare AI are not required for the initial online conversion. Do not introduce them just because they appeared in a technology demonstration.
+### Current demo scope
+
+- One location, one Raspberry Pi 4, one Epson L3210.
+- PDFs stored only on the Pi local disk (default: `backend/uploads`).
+- SQLite database stored on the Pi.
+- Cloudflare Pages hosts only the static frontend.
+- Cloudflare Tunnel publishes the Pi's API hostname.
+- No R2, S3, cloud PDF storage, hosted FastAPI backend, Redis, PostgreSQL, multi-shop system, or AI features.
+- No payment gateway or payment verification. Orders can be created directly for the demo.
+
+### Public URL arrangement
+
+- Frontend: Cloudflare Pages URL, for example `https://your-uprint.pages.dev`.
+- API: a hostname on a domain managed by Cloudflare, for example `https://api.yourdomain.com`.
+- Set `window.UPRINT_API_URL` in `frontend/config.js` to the API HTTPS URL.
+- Set backend `CORS_ORIGINS` to the exact Pages origin.
+- Keep the Pi worker using `http://127.0.0.1:8000`; it does not need to call the public tunnel.
+
+A stable custom API hostname requires a domain added to Cloudflare. A temporary Quick Tunnel can be used for an initial connectivity test, but its generated URL is temporary and should not be used as the production API URL.
 
 ## 5. Online print-job lifecycle
 
@@ -364,11 +370,11 @@ After each milestone, report:
 - [ ] Configure backend secrets and environment variables.
 - [ ] Test public health endpoint.
 
-### Phase 3 — Online document flow
-- [ ] Design storage abstraction.
-- [ ] Select private online object storage.
-- [ ] Implement secure upload and authorized download.
-- [ ] Implement retention and cleanup.
+### Phase 3 — Pi-local document flow
+- [ ] Confirm secure upload validation and file-size limits.
+- [ ] Confirm PDFs are saved only on the Pi.
+- [ ] Confirm authorized worker download from the Pi API.
+- [ ] Define local PDF retention and cleanup.
 - [ ] Test uploads from a device on a separate network.
 
 ### Phase 4 — Cloud job and device APIs
