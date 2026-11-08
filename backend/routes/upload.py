@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import FileResponse
 from pathlib import Path
 from pypdf import PdfReader
@@ -6,6 +6,7 @@ from pypdf.errors import PdfReadError
 import uuid
 
 from config import UPLOAD_DIR, MAX_UPLOAD_BYTES
+from security import require_print_device
 
 router = APIRouter()
 
@@ -66,7 +67,7 @@ async def upload_pdf(file: UploadFile = File(...)):
 
 
 @router.get("/download-pdf/{file_id}")
-def download_pdf(file_id: str):
+def download_pdf(file_id: str, _: None = Depends(require_print_device)):
     try:
         safe_file_id = str(uuid.UUID(file_id))
     except (ValueError, TypeError, AttributeError):
