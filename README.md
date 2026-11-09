@@ -416,3 +416,4 @@ The system must also handle temporary network interruptions safely, protect priv
 ---
 
 **Guiding principle:** Make the existing uPrint system work online. Do not rebuild it unnecessarily. Keep one printing location and one Raspberry Pi in scope, preserve working hardware integration, and introduce cloud components only when they solve a demonstrated requirement.
+Preview deployments are configured through Cloudflare Wrangler.
