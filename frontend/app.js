@@ -1136,23 +1136,18 @@ if (printAnotherBtn) {
 // ORDER TRACKING
 // ============================================================
 
+
 if (trackBtn) {
 
     trackBtn.addEventListener("click", async function () {
 
-        const trackId =
-            trackInput.value.trim();
+        const trackId = trackInput.value.trim();
 
         if (!trackId) {
-
-            trackError.textContent =
-                "Please enter an order ID.";
-
+            trackError.textContent = "Please enter an order ID.";
             trackError.classList.remove("hidden");
             trackResult.classList.add("hidden");
-
             return;
-
         }
 
         trackError.classList.add("hidden");
@@ -1164,26 +1159,27 @@ if (trackBtn) {
         try {
 
             const response = await fetch(
-    `${API_URL}/order/${encodeURIComponent(trackId)}`,
-    {
-        method: "GET",
-        headers: {
-            "ngrok-skip-browser-warning": "true"
-        }
-    }
-);
+                `${API_URL}/order/${encodeURIComponent(trackId)}`,
+                {
+                    method: "GET",
+                    headers: {
+                        "ngrok-skip-browser-warning": "true"
+                    }
+                }
+            );
 
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.detail || "Could not find this order."
+                );
             }
 
             // Fill in tracking results
-            trackOrderId.textContent =
-                data.order_id || trackId;
-
-            trackPages.textContent =
-                data.pages || "—";
-
-            trackCopies.textContent =
-                data.copies || "—";
+            trackOrderId.textContent = data.order_id || trackId;
+            trackPages.textContent = data.pages || "—";
+            trackCopies.textContent = data.copies || "—";
 
             trackType.textContent =
                 (data.print_type || "bw") === "color"
@@ -1191,37 +1187,35 @@ if (trackBtn) {
                     : "B&W";
 
             if (trackPaperSize) {
-                trackPaperSize.textContent = (data.paper_size || "a4").toUpperCase();
+                trackPaperSize.textContent =
+                    (data.paper_size || "a4").toUpperCase();
             }
-            
+
             if (trackSides) {
-                trackSides.textContent = (data.sides || "single") === "double" ? "Double-sided" : "Single-sided";
+                trackSides.textContent =
+                    (data.sides || "single") === "double"
+                        ? "Double-sided"
+                        : "Single-sided";
             }
-            
+
             if (trackOrientation) {
                 const o = data.orientation || "portrait";
-                trackOrientation.textContent = o.charAt(0).toUpperCase() + o.slice(1);
+                trackOrientation.textContent =
+                    o.charAt(0).toUpperCase() + o.slice(1);
             }
 
-            trackAmount.textContent =
-                `₹${data.amount || 0}`;
-
-            trackPayment.textContent =
-                data.payment_status || "—";
-
-            trackStatus.textContent =
-                data.print_status || "—";
+            trackAmount.textContent = `₹${data.amount || 0}`;
+            trackPayment.textContent = data.payment_status || "—";
+            trackStatus.textContent = data.print_status || "—";
 
             syncWorkflowWithOrderStatus(data.print_status);
 
             trackResult.classList.remove("hidden");
 
-
         } catch (error) {
 
             trackError.textContent =
-                error.message ||
-                "Could not find this order.";
+                error.message || "Could not find this order.";
 
             trackError.classList.remove("hidden");
 
@@ -1235,6 +1229,7 @@ if (trackBtn) {
     });
 
 }
+
 
 // Track on Enter key
 if (trackInput) {
