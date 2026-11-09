@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "redesign/uprint-purple-v1",
+  "name": "uprint",
   "compatibility_date": "2026-11-09",
   "assets": {
     "directory": "./frontend"
