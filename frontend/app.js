@@ -1164,16 +1164,14 @@ if (trackBtn) {
         try {
 
             const response = await fetch(
-                `${API_URL}/order/${encodeURIComponent(trackId)}`
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-
-                throw new Error(
-                    data.detail || "Order not found"
-                );
+    `${API_URL}/order/${encodeURIComponent(trackId)}`,
+    {
+        method: "GET",
+        headers: {
+            "ngrok-skip-browser-warning": "true"
+        }
+    }
+);
 
             }
 
